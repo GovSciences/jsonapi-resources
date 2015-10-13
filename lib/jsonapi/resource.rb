@@ -546,8 +546,8 @@ module JSONAPI
             strategy.call(records, value, options)
           end
         else
-          records.where(filter => value)
-        end
+        records.where(filter => value)
+      end
       end
 
       def apply_filters(records, filters, options = {})
@@ -652,12 +652,12 @@ module JSONAPI
           end
           [filter, values]
         else
-          if is_filter_relationship?(filter)
-            verify_relationship_filter(filter, filter_values, context)
-          else
-            verify_custom_filter(filter, filter_values, context)
-          end
+        if is_filter_relationship?(filter)
+          verify_relationship_filter(filter, filter_values, context)
+        else
+          verify_custom_filter(filter, filter_values, context)
         end
+      end
       end
 
       def key_type(key_type)
@@ -674,21 +674,21 @@ module JSONAPI
         case key_type
         when :integer
           return if key.nil?
-          Integer(key)
+              Integer(key)
         when :string
           return if key.nil?
-          if key.to_s.include?(',')
-            raise JSONAPI::Exceptions::InvalidFieldValue.new(:id, key)
-          else
-            key
-          end
+            if key.to_s.include?(',')
+              raise JSONAPI::Exceptions::InvalidFieldValue.new(:id, key)
+            else
+              key
+            end
         when :uuid
           return if key.nil?
-          if key.to_s.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)
-            key
-          else
-            raise JSONAPI::Exceptions::InvalidFieldValue.new(:id, key)
-          end
+            if key.to_s.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)
+              key
+            else
+              raise JSONAPI::Exceptions::InvalidFieldValue.new(:id, key)
+            end
         else
           key_type.call(key, context)
         end
@@ -793,7 +793,8 @@ module JSONAPI
         if name == 'JSONAPI::Resource'
           ''
         else
-          name =~ /::[^:]+\Z/ ? ($`.freeze.gsub('::', '/') + '/').underscore : ''
+          n = /::[^:]+\Z/
+          name.gsub(_model_name =~ n ? "#{$`}::" : '','') =~ n ? ($`.freeze.gsub('::', '/') + '/').underscore : ''
         end
       end
 
