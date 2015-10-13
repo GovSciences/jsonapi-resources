@@ -630,6 +630,69 @@ module JSONAPI
         associations
       end
 
+      def _build_joins(associations)
+        joins = []
+
+        associations.inject do |prev, current|
+          joins << "LEFT JOIN #{current.table_name} AS #{current.name}_sorting ON #{current.name}_sorting.id = #{prev.table_name}.#{current.foreign_key}"
+          current
+        end
+        joins.join("\n")
+      end
+
+      def apply_filter(records, filter, value, options = {})
+        strategy = _allowed_filters.fetch(filter.to_sym, Hash.new)[:apply]
+
+        if strategy
+          if strategy.is_a?(Symbol) || strategy.is_a?(String)
+            send(strategy, records, value, options)
+          else
+            strategy.call(records, value, options)
+          end
+        else
+        records.where(filter => value)
+      end
+      end
+
+      def apply_filters(records, filters, options = {})
+        required_includes = []
+
+        if filters
+          filters.each do |filter, value|
+            if _relationships.include?(filter)
+              if _relationships[filter].belongs_to?
+                records = apply_filter(records, _relationships[filter].foreign_key, value, options)
+              else
+                required_includes.push(filter.to_s)
+                records = apply_filter(records, "#{_relationships[filter].table_name}.#{_relationships[filter].primary_key}", value, options)
+              end
+            else
+              records = apply_filter(records, filter, value, options)
+            end
+          end
+        end
+
+        if required_includes.any?
+          records = apply_includes(records, options.merge(include_directives: IncludeDirectives.new(self, required_includes, force_eager_load: true)))
+        end
+
+        records
+      end
+
+      def filter_records(filters, options, records = records(options))
+        records = apply_filters(records, filters, options)
+        apply_includes(records, options)
+      end
+
+      def sort_records(records, order_options, context = {})
+        apply_sort(records, order_options, context)
+      end
+
+      # Assumes ActiveRecord's counting. Override if you need a different counting method
+      def count_records(records)
+        records.count(:all)
+      end
+
       def find_count(filters, options = {})
         _record_accessor.find_count(filters, options)
       end
@@ -690,12 +753,12 @@ module JSONAPI
           end
           [filter, values]
         else
-          if is_filter_relationship?(filter)
-            verify_relationship_filter(filter, filter_values, context)
-          else
-            verify_custom_filter(filter, filter_values, context)
-          end
+        if is_filter_relationship?(filter)
+          verify_relationship_filter(filter, filter_values, context)
+        else
+          verify_custom_filter(filter, filter_values, context)
         end
+      end
       end
 
       def key_type(key_type)
@@ -712,21 +775,21 @@ module JSONAPI
         case key_type
         when :integer
           return if key.nil?
-          Integer(key)
+              Integer(key)
         when :string
           return if key.nil?
-          if key.to_s.include?(',')
-            raise JSONAPI::Exceptions::InvalidFieldValue.new(:id, key)
-          else
-            key
-          end
+            if key.to_s.include?(',')
+              raise JSONAPI::Exceptions::InvalidFieldValue.new(:id, key)
+            else
+              key
+            end
         when :uuid
           return if key.nil?
-          if key.to_s.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)
-            key
-          else
-            raise JSONAPI::Exceptions::InvalidFieldValue.new(:id, key)
-          end
+            if key.to_s.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)
+              key
+            else
+              raise JSONAPI::Exceptions::InvalidFieldValue.new(:id, key)
+            end
         else
           key_type.call(key, context)
         end
@@ -890,7 +953,8 @@ module JSONAPI
         if name == 'JSONAPI::Resource'
           ''
         else
-          name =~ /::[^:]+\Z/ ? ($`.freeze.gsub('::', '/') + '/').underscore : ''
+          n = /::[^:]+\Z/
+          name.gsub(_model_name =~ n ? "#{$`}::" : '','') =~ n ? ($`.freeze.gsub('::', '/') + '/').underscore : ''
         end
       end
 
