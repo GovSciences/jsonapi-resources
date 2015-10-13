@@ -1072,7 +1072,8 @@ module JSONAPI
         if name == 'JSONAPI::Resource'
           ''
         else
-          name =~ /::[^:]+\Z/ ? ($`.freeze.gsub('::', '/') + '/').underscore : ''
+          n = /::[^:]+\Z/
+          name.gsub(_model_name =~ n ? "#{$`}::" : '','') =~ n ? ($`.freeze.gsub('::', '/') + '/').underscore : ''
         end
       end
 
