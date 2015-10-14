@@ -447,6 +447,10 @@ module JSONAPI
         _model_hints[model_name.to_s.gsub('::', '/').underscore] = resource_type.to_s
       end
 
+      def model_type(type)
+        @_type = type.to_sym
+      end
+
       def filters(*attrs)
         @_allowed_filters.merge!(attrs.inject({}) { |h, attr| h[attr] = {}; h })
       end
