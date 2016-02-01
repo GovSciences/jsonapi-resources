@@ -116,7 +116,7 @@ module JSONAPI
     def regular_primary_resources_path
       [
         formatted_module_path_from_class(primary_resource_klass),
-        format_route(primary_resource_klass._type.to_s),
+        format_route(primary_resource_klass._type.to_s.rpartition('/').last),
       ].join
     end
 
@@ -127,7 +127,7 @@ module JSONAPI
     def regular_resource_path(source)
       [
         formatted_module_path_from_class(source.class),
-        format_route(source.class._type.to_s),
+        format_route(source.class._type.to_s.rpartition('/').last),
         "/#{ source.id }",
       ].join
     end
