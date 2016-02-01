@@ -424,7 +424,7 @@ module JSONAPI
 
         subclass._allowed_filters = (_allowed_filters || Set.new).dup
 
-        type = subclass.name.demodulize.sub(/Resource$/, '').underscore
+        type = subclass.name.sub(/Resource$/, '').underscore
         subclass._type = type.pluralize.to_sym
 
         subclass.attribute :id, format: :id
@@ -433,6 +433,7 @@ module JSONAPI
       end
 
       def resource_for(type)
+        type = type.to_s.underscore
         type_with_module = type.include?('/') ? type : module_path + type
 
         resource_name = _resource_name_from_type(type_with_module)
@@ -933,7 +934,7 @@ module JSONAPI
       end
 
       def _as_parent_key
-        @_as_parent_key ||= "#{_type.to_s.singularize}_id"
+        @_as_parent_key ||= "#{_type.to_s.rpartition('/').last.singularize}_id"
       end
 
       def _allowed_filters
