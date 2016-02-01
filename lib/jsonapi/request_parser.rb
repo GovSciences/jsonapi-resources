@@ -560,7 +560,7 @@ module JSONAPI
             fail JSONAPI::Exceptions::TypeMismatch.new(links_object[:type])
           end
 
-          relationship_resource = Resource.resource_for(@resource_klass.module_path + relationship_type)
+          relationship_resource = Resource.resource_for(relationship_type)
           add_result.call relationship_resource.verify_keys(links_object[relationship_type], @context)
         end
       end
