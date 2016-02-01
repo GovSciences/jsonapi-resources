@@ -14,7 +14,7 @@ module JSONAPI
       # Warning: These make LinkBuilder non-thread-safe. That's not a problem with the
       # request-specific way it's currently used, though.
       @resources_path_cache   = JSONAPI::NaiveCache.new do |source_klass|
-        formatted_module_path_from_class(source_klass) + format_route(source_klass._type.to_s)
+        formatted_module_path_from_class(source_klass) + format_route(source_klass._type.to_s.rpartition('/').last)
       end
     end
 
