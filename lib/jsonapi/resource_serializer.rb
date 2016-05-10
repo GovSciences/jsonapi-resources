@@ -217,19 +217,19 @@ module JSONAPI
               end
             elsif relationship.is_a?(JSONAPI::Relationship::ToMany)
               resources = source.public_send(name)
-              resources.each do |resource|
-                id = resource.id
+            resources.each do |resource|
+              id = resource.id
                 relationships_only = already_serialized?(type, id)
-                if include_linkage && !relationships_only
-                  add_included_object(id, object_hash(resource, ia))
-                elsif include_linked_children || relationships_only
-                  relationships_hash(resource, ia)
-                end
+              if include_linkage && !relationships_only
+                add_included_object(id, object_hash(resource, ia))
+              elsif include_linked_children || relationships_only
+                relationships_hash(resource, ia)
               end
             end
           end
         end
       end
+    end
     end
 
     def already_serialized?(type, id)
@@ -306,8 +306,8 @@ module JSONAPI
     def foreign_key_types_and_values(source, relationship)
       if relationship.is_a?(JSONAPI::Relationship::ToMany)
         if relationship.polymorphic?
-          source._model.public_send(relationship.name).pluck(:type, :id).map do |type, id|
-            [type.underscore.pluralize, IdValueFormatter.format(id)]
+          source._model.public_send(relationship.name).map do |obj|
+            [relationship.resource_klass.resource_for_model(obj)._type.to_s.pluralize, IdValueFormatter.format(obj.id)]
           end
         else
           source.public_send(relationship.foreign_key).map do |value|
