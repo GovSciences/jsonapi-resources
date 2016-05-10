@@ -372,16 +372,8 @@ module JSONAPI
           [relationship.type, resource.id]
         end
       elsif relationship.polymorphic?
-        assoc = source._model.public_send(relationship.name)
-        # Avoid hitting the database again for values already pre-loaded
-        if assoc.respond_to?(:loaded?) and assoc.loaded?
-          assoc.map do |obj|
-            [obj.type.underscore.pluralize, obj.id]
-          end
-        else
-          assoc.pluck(:type, :id).map do |type, id|
-            [type.underscore.pluralize, id]
-          end
+        source._model.public_send(relationship.name).map do |obj|
+          [relationship.resource_klass.resource_for_model(obj)._type.to_s.pluralize, @id_formatter.format(obj.id)]
         end
       else
         source.public_send(relationship.name).map do |value|
@@ -442,16 +434,8 @@ module JSONAPI
     def foreign_key_types_and_values(source, relationship)
       if relationship.is_a?(JSONAPI::Relationship::ToMany)
         if relationship.polymorphic?
-          assoc = source._model.public_send(relationship.name)
-          # Avoid hitting the database again for values already pre-loaded
-          if assoc.respond_to?(:loaded?) and assoc.loaded?
-            assoc.map do |obj|
-              [obj.type.underscore.pluralize, @id_formatter.format(obj.id)]
-            end
-          else
-            assoc.pluck(:type, :id).map do |type, id|
-              [type.underscore.pluralize, @id_formatter.format(id)]
-            end
+          source._model.public_send(relationship.name).map do |obj|
+            [relationship.resource_klass.resource_for_model(obj)._type.to_s.pluralize, @id_formatter.format(obj.id)]
           end
         else
           source.public_send(relationship.name).map do |value|
