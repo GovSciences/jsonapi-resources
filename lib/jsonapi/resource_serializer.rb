@@ -397,16 +397,8 @@ module JSONAPI
           [relationship.type, resource.id]
         end
       elsif relationship.polymorphic?
-        assoc = source._model.public_send(relationship.name)
-        # Avoid hitting the database again for values already pre-loaded
-        if assoc.respond_to?(:loaded?) and assoc.loaded?
-          assoc.map do |obj|
-            [obj.type.underscore.pluralize, obj.id]
-          end
-        else
-          assoc.pluck(:type, :id).map do |type, id|
-            [type.underscore.pluralize, id]
-          end
+        source._model.public_send(relationship.name).map do |obj|
+          [relationship.resource_klass.resource_for_model(obj)._type.to_s.pluralize, @id_formatter.format(obj.id)]
         end
       else
         source.public_send(relationship.name).map do |value|
@@ -466,27 +458,41 @@ module JSONAPI
       @id_formatter.format(related_resource_id)
     end
 
-    def add_resource(source, include_directives, primary = false)
-      type = source.is_a?(JSONAPI::CachedResourceFragment) ? source.type : source.class._type
-      id = source.id
-
-      @included_objects[type] ||= {}
-      existing = @included_objects[type][id]
-
-      if existing.nil?
+def add_resource(source, include_directives, primary = false)
+    type = source.is_a?(JSONAPI::CachedResourceFragment) ? source.type : source.class._type
+    id = source.id
+    
+    @included_objects[type] ||= {}
+    existing = @included_objects[type][id]
+    
+    if existing.nil?
         obj_hash = object_hash(source, include_directives)
         @included_objects[type][id] = {
             primary: primary,
             object_hash: obj_hash,
             includes: Set.new(include_directives[:include_related].keys)
         }
-      else
+        else
         include_related = Set.new(include_directives[:include_related].keys)
         unless existing[:includes].superset?(include_related)
-          obj_hash = object_hash(source, include_directives)
-          @included_objects[type][id][:object_hash].deep_merge!(obj_hash)
-          @included_objects[type][id][:includes].add(include_related)
-          @included_objects[type][id][:primary] = existing[:primary] | primary
+            obj_hash = object_hash(source, include_directives)
+            @included_objects[type][id][:object_hash].deep_merge!(obj_hash)
+            @included_objects[type][id][:includes].add(include_related)
+            @included_objects[type][id][:primary] = existing[:primary] | primary
+        end
+    end
+end
+
+    def foreign_key_types_and_values(source, relationship)
+      if relationship.is_a?(JSONAPI::Relationship::ToMany)
+        if relationship.polymorphic?
+          source._model.public_send(relationship.name).map do |obj|
+            [relationship.resource_klass.resource_for_model(obj)._type.to_s.pluralize, @id_formatter.format(obj.id)]
+          end
+        else
+          source.public_send(relationship.name).map do |value|
+            [relationship.type, @id_formatter.format(value.id)]
+          end
         end
       end
     end
