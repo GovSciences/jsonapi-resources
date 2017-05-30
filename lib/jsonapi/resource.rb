@@ -432,12 +432,13 @@ module JSONAPI
         subclass.record_accessor = @_record_accessor_klass
       end
 
-      def rebuild_relationships(relationships)
-        original_relationships = relationships.deep_dup
-        
       def resource_for(type)
         type = type.to_s.underscore
         type_with_module = type.include?('/') ? type : module_path + type
+      end  
+
+      def rebuild_relationships(relationships)
+        original_relationships = relationships.deep_dup
 
         @_relationships = {}
 
