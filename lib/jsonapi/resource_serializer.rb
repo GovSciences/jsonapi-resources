@@ -355,9 +355,10 @@ module JSONAPI
     def to_one_linkage(source, relationship)
       linkage = {}
       linkage_id = foreign_key_value(source, relationship)
+      linkage_type = format_key(relationship.type_for_source(source))
 
-      if linkage_id
-        linkage[:type] = format_key(relationship.type_for_source(source))
+      if linkage_id && linkage_type.present?
+        linkage[:type] = linkage_type
         linkage[:id] = linkage_id
       else
         linkage = nil
