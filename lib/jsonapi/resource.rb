@@ -764,7 +764,7 @@ module JSONAPI
         context = options[:context]
         records = records(options)
         records = apply_includes(records, options)
-        models = records.where({_primary_key => keys})
+        models = records.in({_primary_key => keys})
         models.collect do |model|
           self.resource_for_model(model).new(model, context)
         end
