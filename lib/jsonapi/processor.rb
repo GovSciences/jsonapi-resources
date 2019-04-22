@@ -260,7 +260,7 @@ module JSONAPI
       key_value = params[:key_value]
 
       resource = resource_klass.find_by_key(resource_id, context: context)
-      result = resource.replace_to_one_link(relationship_type, key_value)
+      result = resource.replace_to_one_link(relationship_type, key_value, context: context)
 
       return JSONAPI::OperationResult.new(result == :completed ? :no_content : :accepted)
     end
@@ -272,7 +272,7 @@ module JSONAPI
       key_type = params[:key_type]
 
       resource = resource_klass.find_by_key(resource_id, context: context)
-      result = resource.replace_polymorphic_to_one_link(relationship_type, key_value, key_type)
+      result = resource.replace_polymorphic_to_one_link(relationship_type, key_value, key_type, context: context)
 
       return JSONAPI::OperationResult.new(result == :completed ? :no_content : :accepted)
     end
@@ -283,7 +283,7 @@ module JSONAPI
       data = params[:data]
 
       resource = resource_klass.find_by_key(resource_id, context: context)
-      result = resource.create_to_many_links(relationship_type, data)
+      result = resource.create_to_many_links(relationship_type, data, context: context)
 
       return JSONAPI::OperationResult.new(result == :completed ? :no_content : :accepted)
     end
@@ -294,7 +294,7 @@ module JSONAPI
       data = params.fetch(:data)
 
       resource = resource_klass.find_by_key(resource_id, context: context)
-      result = resource.replace_to_many_links(relationship_type, data)
+      result = resource.replace_to_many_links(relationship_type, data, context: context)
 
       return JSONAPI::OperationResult.new(result == :completed ? :no_content : :accepted)
     end
@@ -308,7 +308,7 @@ module JSONAPI
 
       complete = true
       associated_keys.each do |key|
-        result = resource.remove_to_many_link(relationship_type, key)
+        result = resource.remove_to_many_link(relationship_type, key, context: context)
         if complete && result != :completed
           complete = false
         end
@@ -321,7 +321,7 @@ module JSONAPI
       relationship_type = params[:relationship_type].to_sym
 
       resource = resource_klass.find_by_key(resource_id, context: context)
-      result = resource.remove_to_one_link(relationship_type)
+      result = resource.remove_to_one_link(relationship_type, context: context)
 
       return JSONAPI::OperationResult.new(result == :completed ? :no_content : :accepted)
     end

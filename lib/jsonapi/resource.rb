@@ -274,9 +274,9 @@ module JSONAPI
       related_resources.each do |related_resource|
         if reflect
           if related_resource.class._relationships[relationship.inverse_relationship].is_a?(JSONAPI::Relationship::ToMany)
-            related_resource.create_to_many_links(relationship.inverse_relationship, [id], reflected_source: self)
+            related_resource.create_to_many_links(relationship.inverse_relationship, [id], reflected_source: self, context: @context)
           else
-            related_resource.replace_to_one_link(relationship.inverse_relationship, id, reflected_source: self)
+            related_resource.replace_to_one_link(relationship.inverse_relationship, id, reflected_source: self, context: @context)
           end
           @reload_needed = true
         else
@@ -296,11 +296,11 @@ module JSONAPI
         existing = send("#{relationship.foreign_key}")
         to_delete = existing - (relationship_key_values & existing)
         to_delete.each do |key|
-          _remove_to_many_link(relationship_type, key, reflected_source: self)
+          _remove_to_many_link(relationship_type, key, reflected_source: self, context: @context)
         end
 
         to_add = relationship_key_values - (relationship_key_values & existing)
-        _create_to_many_links(relationship_type, to_add, {})
+        _create_to_many_links(relationship_type, to_add, context: @context)
 
         @reload_needed = true
       elsif relationship.polymorphic?
@@ -366,9 +366,9 @@ module JSONAPI
           fail JSONAPI::Exceptions::RecordNotFound.new(key)
         else
           if related_resource.class._relationships[relationship.inverse_relationship].is_a?(JSONAPI::Relationship::ToMany)
-            related_resource.remove_to_many_link(relationship.inverse_relationship, id, reflected_source: self)
+            related_resource.remove_to_many_link(relationship.inverse_relationship, id, reflected_source: self, context: @context)
           else
-            related_resource.remove_to_one_link(relationship.inverse_relationship, reflected_source: self)
+            related_resource.remove_to_one_link(relationship.inverse_relationship, reflected_source: self, context: @context)
           end
         end
 
@@ -408,19 +408,19 @@ module JSONAPI
 
       field_data[:to_one].each do |relationship_type, value|
         if value.nil?
-          remove_to_one_link(relationship_type)
+          remove_to_one_link(relationship_type, context: @context)
         else
           case value
           when Hash
-            replace_polymorphic_to_one_link(relationship_type.to_s, value.fetch(:id), value.fetch(:type))
+            replace_polymorphic_to_one_link(relationship_type.to_s, value.fetch(:id), value.fetch(:type), context: @context)
           else
-            replace_to_one_link(relationship_type, value)
+            replace_to_one_link(relationship_type, value, context: @context)
           end
         end
       end if field_data[:to_one]
 
       field_data[:to_many].each do |relationship_type, values|
-        replace_to_many_links(relationship_type, values)
+        replace_to_many_links(relationship_type, values, context: @context)
       end if field_data[:to_many]
 
       :completed
