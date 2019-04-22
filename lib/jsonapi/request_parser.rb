@@ -549,7 +549,7 @@ module JSONAPI
             linkage_object_resource_klass = resource.resource_for(type_name)
             linkage_object_klass = linkage_object_resource_klass._model_class
 
-            unless linkage_object_klass == relationship_klass || linkage_object_klass.in?(relationship_klass.subclasses)
+            unless linkage_object_klass == relationship_klass || linkage_object_klass.in?(relationship_klass.descendants)
               fail JSONAPI::Exceptions::TypeMismatch.new(type_name)
             end
 
