@@ -310,9 +310,9 @@ module JSONAPI
 
           related_records = relationship_resource_klass
             .records(options)
-            .in({relationship_resource_klass._primary_key => ids})
+            .where({relationship_resource_klass._primary_key => ids})
 
-          missed_ids = ids - related_records.pluck(relationship_resource_klass._primary_key).map(&:to_s)
+          missed_ids = ids - related_records.pluck(relationship_resource_klass._primary_key)
 
           if missed_ids.present?
             fail JSONAPI::Exceptions::RecordNotFound.new(missed_ids)
@@ -820,7 +820,7 @@ module JSONAPI
         context = options[:context]
         records = records(options)
         records = apply_includes(records, options)
-        models = records.in({_primary_key => keys})
+        models = records.where({_primary_key => keys})
         models.collect do |model|
           self.resource_for_model(model).new(model, context)
         end

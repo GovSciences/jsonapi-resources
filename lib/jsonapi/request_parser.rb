@@ -470,12 +470,7 @@ module JSONAPI
               checked_to_one_relationships[param] = parse_to_one_relationship(link_value, relationship)
             elsif relationship.is_a?(JSONAPI::Relationship::ToMany)
               parse_to_many_relationship(link_value, relationship) do |result_val|
-                #for polymorphic updates
-                if checked_to_many_relationships[param]
-                  checked_to_many_relationships[param] = checked_to_many_relationships[param].concat(result_val)
-                else
-                  checked_to_many_relationships[param] = result_val
-                end
+                checked_to_many_relationships[param] = result_val
               end
             end
           end
